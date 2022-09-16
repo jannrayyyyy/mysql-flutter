@@ -3,11 +3,22 @@ import 'package:http/http.dart' as http;
 
 import 'employee_model.dart'; // add the http plugin in pubspec.yaml file.
 
+// $full_name = $_POST['full_name'];
+// $email = $_POST['email'];
+// $gender = $_POST['gender'];
+// $contact_number = $_POST['contact_number'];
+// $location_address = $_POST['location_address'];
+// $pass = $_POST['pass'];
+// $coordinates = $_POST['coordinates'];
 class Services {
   static const root = 'http://www.lanuzapp.elementfx.com/connection.php';
-  static const _CREATE_TABLE_ACTION = 'CREATE_TABLE';
+
+  static const _ADD_EMP_ACTION = 'REGISTER';
+  static const _CREATE_TABLE_ACTION = 'CREATE_USER_TABLE';
+
+  // static const _CREATE_TABLE_ACTION = 'CREATE_TABLE';
   static const _GET_ALL_ACTION = 'GET_ALL';
-  static const _ADD_EMP_ACTION = 'ADD_EMP';
+  // static const _ADD_EMP_ACTION = 'ADD_EMP';
   static const _UPDATE_EMP_ACTION = 'UPDATE_EMP';
   static const _DELETE_EMP_ACTION = 'DELETE_EMP';
 
@@ -51,13 +62,25 @@ class Services {
     return parsed.map<Employee>((json) => Employee.fromJson(json)).toList();
   }
 
-  // Method to add employee to the database...
-  static Future<String> addEmployee(String firstName, String lastName) async {
+  // lagay mo string lahat dapat
+  static Future<String> registerUser(String fullName, String email) async {
     try {
+// $full_name = $_POST['full_name'];
+// $email = $_POST['email'];
+// $gender = $_POST['gender'];
+// $contact_number = $_POST['contact_number'];
+// $location_address = $_POST['location_address'];
+// $pass = $_POST['pass'];
+// $coordinates = $_POST['coordinates'];
       var map = <String, dynamic>{};
       map['action'] = _ADD_EMP_ACTION;
-      map['first_name'] = firstName;
-      map['last_name'] = lastName;
+      map['full_name'] = 'KARL S. REGINALDO';
+      map['email'] = 'reginaldokarlsjan@gmail.com';
+      map['gender'] = 'MALE';
+      map['contact_number'] = '+63928232';
+      map['location_address'] = 'GENTREE';
+      map['pass'] = 'PASWORDKTO';
+      map['coordinates'] = '2323,1232';
       final response = await http.post(Uri.parse(root), body: map);
       print('addEmployee Response: ${response.body}');
       if (200 == response.statusCode) {

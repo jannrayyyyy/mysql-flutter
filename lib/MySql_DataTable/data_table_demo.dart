@@ -60,7 +60,7 @@ class DataTableDemoState extends State<DataTableDemo> {
       return;
     }
     _showProgress('Adding Employee...');
-    Services.addEmployee(_firstNameController.text, _lastNameController.text)
+    Services.registerUser(_firstNameController.text, _lastNameController.text)
         .then((result) {
       if ('success' == result) {
         _getEmployees(); // Refresh the List after adding each employee...
