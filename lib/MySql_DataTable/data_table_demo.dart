@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:test_app/MySql_DataTable/remote_data_source.dart';
-
 import 'employee_model.dart';
 
 class DataTableDemo extends StatefulWidget {
+  //
   const DataTableDemo({super.key});
 
-  final String title = "Flutter Data Table";
+  final String title = 'Flutter Data Table';
 
   @override
   DataTableDemoState createState() => DataTableDemoState();
@@ -14,8 +14,10 @@ class DataTableDemo extends StatefulWidget {
 
 class DataTableDemoState extends State<DataTableDemo> {
   List<Employee> _employees = [];
-  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
+  GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  // controller for the First Name TextField we are going to create.
   TextEditingController _firstNameController = TextEditingController();
+  // controller for the Last Name TextField we are going to create.
   TextEditingController _lastNameController = TextEditingController();
   Employee _selectedEmployee = Employee(id: '', firstName: '', lastName: '');
   bool _isUpdating = false;
@@ -27,12 +29,13 @@ class DataTableDemoState extends State<DataTableDemo> {
     _employees = [];
     _isUpdating = false;
     _titleProgress = widget.title;
-    _scaffoldKey = GlobalKey();
+    _scaffoldKey = GlobalKey(); // key to get the context to show a SnackBar
     _firstNameController = TextEditingController();
     _lastNameController = TextEditingController();
     _getEmployees();
   }
 
+  // Method to update title in the AppBar Title
   _showProgress(String message) {
     setState(() {
       _titleProgress = message;
@@ -41,31 +44,28 @@ class DataTableDemoState extends State<DataTableDemo> {
 
   _createTable() {
     _showProgress('Creating Table...');
-    Services.createTables().then((result) {
+    Services.createTable().then((result) {
       if ('success' == result) {
-        _getEmployees();
-        print(result);
-      } else {
-        print('di nag create lods');
+        // Table is created successfully.
+
+        _showProgress(widget.title);
       }
     });
   }
 
+  // Now lets add an Employee
   _addEmployee() {
-    if (_firstNameController.text.trim().isEmpty ||
-        _lastNameController.text.trim().isEmpty) {
+    if (_firstNameController.text.isEmpty || _lastNameController.text.isEmpty) {
+      print('Empty Fields');
       return;
     }
     _showProgress('Adding Employee...');
-    Services.addEmployees(_firstNameController.text, _lastNameController.text)
+    Services.addEmployee(_firstNameController.text, _lastNameController.text)
         .then((result) {
       if ('success' == result) {
-        _getEmployees();
-        print(result);
-      } else {
-        print('di nag add lods');
+        _getEmployees(); // Refresh the List after adding each employee...
+        _clearValues();
       }
-      _clearValues();
     });
   }
 
@@ -75,128 +75,137 @@ class DataTableDemoState extends State<DataTableDemo> {
       setState(() {
         _employees = employees;
       });
-      _showProgress(widget.title);
+      _showProgress(widget.title); // Reset the title...
+      print("Length ${employees.length}");
+    });
+  }
+
+  _updateEmployee(Employee employee) {
+    setState(() {
+      _isUpdating = true;
+    });
+    _showProgress('Updating Employee...');
+    Services.updateEmployee(
+            employee.id, _firstNameController.text, _lastNameController.text)
+        .then((result) {
+      if ('success' == result) {
+        _getEmployees(); // Refresh the list after update
+        setState(() {
+          _isUpdating = false;
+        });
+        _clearValues();
+      }
     });
   }
 
   _deleteEmployee(Employee employee) {
     _showProgress('Deleting Employee...');
-    Services.deleteEmployees(employee.id).then((result) {
+    Services.deleteEmployee(employee.id).then((result) {
       if ('success' == result) {
-        setState(() {
-          _employees.remove(employee);
-        });
-        _getEmployees();
+        _getEmployees(); // Refresh after delete...
       }
     });
   }
 
-  _updateEmployee(Employee employee) {
-    _showProgress('Updating Employee...');
-    Services.updateEmployees(
-            employee.id, _firstNameController.text, _lastNameController.text)
-        .then((result) {
-      if ('success' == result) {
-        _getEmployees();
-        setState(() {
-          _isUpdating = false;
-        });
-        _firstNameController.text = '';
-        _lastNameController.text = '';
-      }
-    });
-  }
-
-  _setValues(Employee employee) {
-    _firstNameController.text = employee.firstName;
-    _lastNameController.text = employee.lastName;
-    setState(() {
-      _isUpdating = true;
-    });
-  }
-
+  // Method to clear TextField values
   _clearValues() {
     _firstNameController.text = '';
     _lastNameController.text = '';
   }
 
-  SingleChildScrollView _dataBody() {
-    return SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-              columns: const [
-                DataColumn(
-                    label: Text("ID"),
-                    numeric: false,
-                    tooltip: "This is the employee id"),
-                DataColumn(
-                    label: Text(
-                      "FIRST",
-                    ),
-                    numeric: false,
-                    tooltip: "This is the last name"),
-                DataColumn(
-                    label: Text("LAST"),
-                    numeric: false,
-                    tooltip: "This is the last name"),
-                DataColumn(
-                    label: Text("DELETE"),
-                    numeric: false,
-                    tooltip: "Delete Action"),
-              ],
-              rows: _employees
-                  .map(
-                    (employee) => DataRow(
-                      cells: [
-                        DataCell(
-                          Text(employee.id),
-                          onTap: () {
-                            _setValues(employee);
-                            _selectedEmployee = employee;
-                          },
-                        ),
-                        DataCell(
-                          Text(
-                            employee.firstName.toUpperCase(),
-                          ),
-                          onTap: () {
-                            _setValues(employee);
-                            _selectedEmployee = employee;
-                          },
-                        ),
-                        DataCell(
-                          Text(
-                            employee.lastName.toUpperCase(),
-                          ),
-                          onTap: () {
-                            _setValues(employee);
-                            _selectedEmployee = employee;
-                          },
-                        ),
-                        DataCell(
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              _deleteEmployee(employee);
-                            },
-                          ),
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-                  )
-                  .toList()),
-        ));
+  _showValues(Employee employee) {
+    _firstNameController.text = employee.firstName;
+    _lastNameController.text = employee.lastName;
   }
 
+  // Let's create a DataTable and show the employee list in it.
+  SingleChildScrollView _dataBody() {
+    // Both Vertical and Horozontal Scrollview for the DataTable to
+    // scroll both Vertical and Horizontal...
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          columns: const [
+            DataColumn(
+              label: Text('ID'),
+            ),
+            DataColumn(
+              label: Text('FIRST NAME'),
+            ),
+            DataColumn(
+              label: Text('LAST NAME'),
+            ),
+            // Lets add one more column to show a delete button
+            DataColumn(
+              label: Text('DELETE'),
+            )
+          ],
+          rows: _employees
+              .map(
+                (employee) => DataRow(cells: [
+                  DataCell(
+                    Text(employee.id),
+                    // Add tap in the row and populate the
+                    // textfields with the corresponding values to update
+                    onTap: () {
+                      _showValues(employee);
+                      // Set the Selected employee to Update
+                      _selectedEmployee = employee;
+                      setState(() {
+                        _isUpdating = true;
+                      });
+                    },
+                  ),
+                  DataCell(
+                    Text(
+                      employee.firstName.toUpperCase(),
+                    ),
+                    onTap: () {
+                      _showValues(employee);
+                      // Set the Selected employee to Update
+                      _selectedEmployee = employee;
+                      // Set flag updating to true to indicate in Update Mode
+                      setState(() {
+                        _isUpdating = true;
+                      });
+                    },
+                  ),
+                  DataCell(
+                    Text(
+                      employee.lastName.toUpperCase(),
+                    ),
+                    onTap: () {
+                      _showValues(employee);
+                      // Set the Selected employee to Update
+                      _selectedEmployee = employee;
+                      setState(() {
+                        _isUpdating = true;
+                      });
+                    },
+                  ),
+                  DataCell(IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () {
+                      _deleteEmployee(employee);
+                    },
+                  ))
+                ]),
+              )
+              .toList(),
+        ),
+      ),
+    );
+  }
+
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: Text(_titleProgress),
+        title: Text(_titleProgress), // we show the progress in the title...
         actions: <Widget>[
           IconButton(
             icon: const Icon(Icons.add),
@@ -209,55 +218,59 @@ class DataTableDemoState extends State<DataTableDemo> {
             onPressed: () {
               _getEmployees();
             },
-          ),
-        ],
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: TextField(
-              controller: _firstNameController,
-              decoration: const InputDecoration.collapsed(
-                hintText: "First Name",
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: TextField(
-              controller: _lastNameController,
-              decoration: const InputDecoration.collapsed(
-                hintText: "Last Name",
-              ),
-            ),
-          ),
-          _isUpdating
-              ? Row(
-                  children: [
-                    GestureDetector(
-                      child: const Text('UPDATE'),
-                      onTap: () {
-                        _updateEmployee(_selectedEmployee);
-                      },
-                    ),
-                    GestureDetector(
-                      child: const Text('CANCEL'),
-                      onTap: () {
-                        setState(() {
-                          _isUpdating = false;
-                        });
-                        _clearValues();
-                      },
-                    ),
-                  ],
-                )
-              : Container(),
-          Expanded(
-            child: _dataBody(),
           )
         ],
+      ),
+      body: Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: TextField(
+                controller: _firstNameController,
+                decoration: const InputDecoration.collapsed(
+                  hintText: 'First Name',
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: TextField(
+                controller: _lastNameController,
+                decoration: const InputDecoration.collapsed(
+                  hintText: 'Last Name',
+                ),
+              ),
+            ),
+            // Add an update button and a Cancel Button
+            // show these buttons only when updating an employee
+            _isUpdating
+                ? Row(
+                    children: <Widget>[
+                      GestureDetector(
+                        child: const Text('UPDATE'),
+                        onTap: () {
+                          _updateEmployee(_selectedEmployee);
+                        },
+                      ),
+                      GestureDetector(
+                        child: const Text('CANCEL'),
+                        onTap: () {
+                          setState(() {
+                            _isUpdating = false;
+                          });
+                          _clearValues();
+                        },
+                      ),
+                    ],
+                  )
+                : Container(),
+            Expanded(
+              child: _dataBody(),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

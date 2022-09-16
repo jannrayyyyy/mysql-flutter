@@ -1,30 +1,48 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-import 'employee_model.dart';
+import 'employee_model.dart'; // add the http plugin in pubspec.yaml file.
 
 class Services {
-  static const root = 'http://localhost/Employees/epddr.php';
-  static const String getAction = 'GET_ALL';
-  static const String createTable = 'CREATE_TABLE';
-  static const String addEmployee = 'ADD_EMP';
-  static const String updateEmployee = 'UPDATE_EMP';
-  static const String deleteEmployee = 'DELETE_EMP';
+  static const root = 'http://www.lanuzapp.elementfx.com/connection.php';
+  static const _CREATE_TABLE_ACTION = 'CREATE_TABLE';
+  static const _GET_ALL_ACTION = 'GET_ALL';
+  static const _ADD_EMP_ACTION = 'ADD_EMP';
+  static const _UPDATE_EMP_ACTION = 'UPDATE_EMP';
+  static const _DELETE_EMP_ACTION = 'DELETE_EMP';
+
+  // Method to create the table Employees.
+  static Future<String> createTable() async {
+    try {
+      // add the parameters to pass to the request.
+      var map = <String, dynamic>{};
+      map['action'] = _CREATE_TABLE_ACTION;
+      final response = await http.post(Uri.parse(root), body: map);
+      print('Create Table Response: ${response.body}');
+      if (200 == response.statusCode) {
+        return response.body;
+      } else {
+        return "error";
+      }
+    } catch (e) {
+      return "error";
+    }
+  }
 
   static Future<List<Employee>> getEmployees() async {
     try {
       var map = <String, dynamic>{};
-      map['action'] = getAction;
+      map['action'] = _GET_ALL_ACTION;
       final response = await http.post(Uri.parse(root), body: map);
-
-      if (response.statusCode == 200) {
+      print('getEmployees Response: ${response.body}');
+      if (200 == response.statusCode) {
         List<Employee> list = parseResponse(response.body);
         return list;
       } else {
-        throw <Employee>[];
+        return <Employee>[];
       }
     } catch (e) {
-      return <Employee>[];
+      return <Employee>[]; // return an empty list on exception/error
     }
   }
 
@@ -33,55 +51,61 @@ class Services {
     return parsed.map<Employee>((json) => Employee.fromJson(json)).toList();
   }
 
-  static Future<String> createTables() async {
+  // Method to add employee to the database...
+  static Future<String> addEmployee(String firstName, String lastName) async {
     try {
       var map = <String, dynamic>{};
-      map['action'] = createTable;
+      map['action'] = _ADD_EMP_ACTION;
+      map['first_name'] = firstName;
+      map['last_name'] = lastName;
       final response = await http.post(Uri.parse(root), body: map);
-      return response.body;
+      print('addEmployee Response: ${response.body}');
+      if (200 == response.statusCode) {
+        return response.body;
+      } else {
+        return "error";
+      }
     } catch (e) {
-      return 'error';
+      return "error";
     }
   }
 
-  static Future<String> addEmployees(String firstName, String lastName) async {
-    try {
-      var map = <String, dynamic>{};
-      map['action'] = addEmployee;
-      map["first_name"] = firstName;
-      map["last_name"] = lastName;
-      final response = await http.post(Uri.parse(root), body: map);
-      return response.body;
-    } catch (e) {
-      return 'error';
-    }
-  }
-
-  static Future<String> updateEmployees(
+  // Method to update an Employee in Database...
+  static Future<String> updateEmployee(
       String empId, String firstName, String lastName) async {
     try {
       var map = <String, dynamic>{};
-      map['action'] = updateEmployee;
-      map["emp_id"] = empId;
-      map["first_name"] = firstName;
-      map["last_name"] = lastName;
+      map['action'] = _UPDATE_EMP_ACTION;
+      map['emp_id'] = empId;
+      map['first_name'] = firstName;
+      map['last_name'] = lastName;
       final response = await http.post(Uri.parse(root), body: map);
-      return response.body;
+      print('updateEmployee Response: ${response.body}');
+      if (200 == response.statusCode) {
+        return response.body;
+      } else {
+        return "error";
+      }
     } catch (e) {
-      return 'error';
+      return "error";
     }
   }
 
-  static Future<String> deleteEmployees(String empId) async {
+  // Method to Delete an Employee from Database...
+  static Future<String> deleteEmployee(String empId) async {
     try {
       var map = <String, dynamic>{};
-      map['action'] = deleteEmployee;
-      map["emp_id"] = empId;
+      map['action'] = _DELETE_EMP_ACTION;
+      map['emp_id'] = empId;
       final response = await http.post(Uri.parse(root), body: map);
-
-      return response.body;
+      print('deleteEmployee Response: ${response.body}');
+      if (200 == response.statusCode) {
+        return response.body;
+      } else {
+        return "error";
+      }
     } catch (e) {
-      return 'error';
+      return "error"; // returning just an "error" string to keep this simple...
     }
   }
 }
